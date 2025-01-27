@@ -74,7 +74,7 @@ prompt_user() {
         read -rp "Is your GPU AMD, Intel, or NVIDIA? (amd/intel/nvidia): " gpu_type
         case $gpu_type in
             amd)
-                sudo pacman -S --needed --noconfirm mesa xf86-video-amdgpu amdvlk lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader vulkan-mesa-layers lib32-vulkan-mesa-layers
+                sudo pacman -S --needed --noconfirm mesa xf86-video-amdgpu lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader vulkan-mesa-layers lib32-vulkan-mesa-layers
                 read -rp "Will you be using DaVinci Resolve and/or Machine Learning? (y/n): " davinci
                 if [[ $davinci =~ ^[Yy](es)?$ ]]; then
                     sudo pacman -S --needed --noconfirm mesa lib32-mesa rocm-opencl-runtime rocm-hip-runtime
