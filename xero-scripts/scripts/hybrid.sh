@@ -64,75 +64,87 @@ fi
 # Detect GPU configuration
 gpu_config=$(check_dual_gpu)
 
-# Inform the user about the detected GPU configuration
-if [ "$gpu_config" != "None" ]; then
-    gum style --foreground 196 "Detected GPU configuration: $gpu_config"
+# Show the user what GPU combo was detected (or if none)
+if [ "$gpu_config" = "Intel/NVIDIA" ]; then
     echo
+    gum style --foreground 33 "Detected GPU configuration: Intel/NVIDIA"
+elif [ "$gpu_config" = "NVIDIA/AMD" ]; then
+    echo
+    gum style --foreground 196 "Detected GPU configuration: NVIDIA/AMD"
 else
+    echo
     gum style --foreground 196 "No dual GPU configuration detected."
     exit 1
 fi
 
-# Prompt the user to confirm if it's okay to proceed
-while true; do
-    read -p "Do you want to proceed with the driver installation? (y/n): " proceed_choice
-    proceed_choice=$(echo "$proceed_choice" | tr '[:upper:]' '[:lower:]')
-    if [ "$proceed_choice" = "y" ]; then
-        break
-    elif [ "$proceed_choice" = "n" ]; then
-        echo "Driver installation canceled."
-        exit 0
-    else
-        echo "Invalid input. Please enter 'y' or 'n'."
-    fi
-done
-
-# Proceed with driver installation based on GPU configuration
-if [ "$gpu_config" = "Intel/NVIDIA" ]; then
-    gum style --foreground 33 "Intel/NVIDIA detected. Setup should work for most."
-    echo
+# Only proceed if a valid dual GPU configuration was detected
+if [ "$gpu_config" = "Intel/NVIDIA" ] || [ "$gpu_config" = "NVIDIA/AMD" ]; then
+    # Prompt the user to confirm if it's okay to proceed
     while true; do
-        read -p "Do you want (C)losed or (O)pen drivers? (c/o): " driver_choice
-        driver_choice=$(echo "$driver_choice" | tr '[:upper:]' '[:lower:]')
-        if [ "$driver_choice" = "c" ]; then
-            install_nvidia_intel "closed"
+        read -p "Do you want to proceed with the driver installation? (y/n): " proceed_choice
+        proceed_choice=$(echo "$proceed_choice" | tr '[:upper:]' '[:lower:]')
+        if [ "$proceed_choice" = "y" ]; then
             break
-        elif [ "$driver_choice" = "o" ]; then
-            install_nvidia_intel "open"
-            break
+        elif [ "$proceed_choice" = "n" ]; then
+            echo
+            echo "Driver installation canceled."
+            exit 0
         else
-            echo "Invalid input. Please choose 'c' or 'o'."
+            echo "Invalid input. Please enter 'y' or 'n'."
         fi
     done
-elif [ "$gpu_config" = "NVIDIA/AMD" ]; then
-    gum style --foreground 196 "NVIDIA/AMD detected. Setup should work for most."
-    echo
+
+    # Proceed with driver installation based on GPU configuration
+    if [ "$gpu_config" = "Intel/NVIDIA" ]; then
+        gum style --foreground 33 "Intel/NVIDIA detected. Setup should work for most."
+        echo
+        while true; do
+            read -p "Do you want (C)losed or (O)pen drivers? (c/o): " driver_choice
+            driver_choice=$(echo "$driver_choice" | tr '[:upper:]' '[:lower:]')
+            if [ "$driver_choice" = "c" ]; then
+                install_nvidia_intel "closed"
+                break
+            elif [ "$driver_choice" = "o" ]; then
+                install_nvidia_intel "open"
+                break
+            else
+                echo
+                echo "Invalid input. Please choose 'c' or 'o'."
+            fi
+        done
+    elif [ "$gpu_config" = "NVIDIA/AMD" ]; then
+        gum style --foreground 196 "NVIDIA/AMD detected. Setup should work for most."
+        echo
+        while true; do
+            read -p "Do you want (C)losed or (O)pen drivers? (c/o): " driver_choice
+            driver_choice=$(echo "$driver_choice" | tr '[:upper:]' '[:lower:]')
+            if [ "$driver_choice" = "c" ]; then
+                install_nvidia_amd "closed"
+                break
+            elif [ "$driver_choice" = "o" ]; then
+                install_nvidia_amd "open"
+                break
+            else
+                echo
+                echo "Invalid input. Please choose 'c' or 'o'."
+            fi
+        done
+    fi
+
+    # Reboot prompt
     while true; do
-        read -p "Do you want (C)losed or (O)pen drivers? (c/o): " driver_choice
-        driver_choice=$(echo "$driver_choice" | tr '[:upper:]' '[:lower:]')
-        if [ "$driver_choice" = "c" ]; then
-            install_nvidia_amd "closed"
+        read -p "A reboot is required. Do you want to reboot now? (y/n): " reboot_choice
+        reboot_choice=$(echo "$reboot_choice" | tr '[:upper:]' '[:lower:]')
+        if [ "$reboot_choice" = "y" ]; then
+            sudo reboot
             break
-        elif [ "$driver_choice" = "o" ]; then
-            install_nvidia_amd "open"
+        elif [ "$reboot_choice" = "n" ]; then
+            echo
+            echo "Please remember to reboot your system to apply the changes."
             break
         else
-            echo "Invalid input. Please choose 'c' or 'o'."
+            echo
+            echo "Invalid input. Please enter 'y' or 'n'."
         fi
     done
 fi
-
-# Reboot prompt
-while true; do
-    read -p "A reboot is required. Do you want to reboot now? (y/n): " reboot_choice
-    reboot_choice=$(echo "$reboot_choice" | tr '[:upper:]' '[:lower:]')
-    if [ "$reboot_choice" = "y" ]; then
-        sudo reboot
-        break
-    elif [ "$reboot_choice" = "n" ]; then
-        echo "Please remember to reboot your system to apply the changes."
-        break
-    else
-        echo "Invalid input. Please enter 'y' or 'n'."
-    fi
-done
